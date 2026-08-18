@@ -20,7 +20,9 @@ export default function ExhibitorsAdminClient({ exhibitors }: { exhibitors: Exhi
 
   const filtered = exhibitors.filter(ex => {
     const q = search.toLowerCase()
-    return !search || ex.company_name.toLowerCase().includes(q) || ex.profiles.email.toLowerCase().includes(q)
+    return !search || 
+           ex.company_name.toLowerCase().includes(q) || 
+           (ex.profiles?.email?.toLowerCase().includes(q))
   })
 
   function doReset(profileId: string, name: string) {
@@ -65,12 +67,20 @@ export default function ExhibitorsAdminClient({ exhibitors }: { exhibitors: Exhi
                   {ex.booth_number && <span className="text-xs" style={{ color: 'var(--muted)' }}>Booth {ex.booth_number}</span>}
                 </div>
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  {ex.profiles.full_name} · {ex.profiles.email}
-                  {ex.profiles.phone ? ` · ${ex.profiles.phone}` : ''}
+                  {ex.profiles ? (
+                    <>
+                      {ex.profiles.full_name} · {ex.profiles.email || 'No email'}
+                      {ex.profiles.phone ? ` · ${ex.profiles.phone}` : ''}
+                    </>
+                  ) : (
+                    <span className="text-red-500">Thiếu dữ liệu Profile (Lỗi đồng bộ)</span>
+                  )}
                 </p>
                 {ex.description && <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{ex.description}</p>}
               </div>
-              <button onClick={() => doReset(ex.profiles.id, ex.profiles.full_name)} disabled={isPending}
+              <button 
+                onClick={() => ex.profiles && doReset(ex.profiles.id, ex.profiles.full_name)} 
+                disabled={isPending || !ex.profiles}
                 className="btn-outline text-xs px-3 py-1.5">
                 Reset mật khẩu
               </button>

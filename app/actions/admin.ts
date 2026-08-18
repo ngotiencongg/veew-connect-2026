@@ -30,7 +30,7 @@ export async function importBuyers(rows: ImportBuyerRow[]) {
       email: row.email,
       password,
       email_confirm: true,
-      user_metadata: { full_full_name: row.full_name, role: 'buyer' },
+      user_metadata: { full_name: row.full_name, role: 'buyer' },
     })
 
     if (signUpError) {

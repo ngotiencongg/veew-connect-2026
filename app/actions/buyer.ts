@@ -38,7 +38,6 @@ export async function registerBuyer(formData: FormData) {
     .from('profiles')
     .upsert({
       id: authData.user.id,
-      email,
       full_name: fullName,
       role: 'buyer',
       status: 'pending',

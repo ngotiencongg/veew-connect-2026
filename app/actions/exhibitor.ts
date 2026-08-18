@@ -34,9 +34,8 @@ export async function createExhibitorAccount(formData: FormData) {
   }
 
   // Create profile
-  await admin.from('profiles').upsert({
+  const { error: profileErr } = await admin.from('profiles').upsert({
     id: authData.user.id,
-    email,
     full_name: fullName,
     role: 'exhibitor',
     status: 'approved',
@@ -44,6 +43,11 @@ export async function createExhibitorAccount(formData: FormData) {
     industry,
     country,
   })
+
+  if (profileErr) {
+    await admin.auth.admin.deleteUser(authData.user.id)
+    return { error: 'Lỗi tạo hồ sơ profile: ' + profileErr.message }
+  }
 
   // Create exhibitor record
   const { error: exErr } = await admin.from('exhibitors').insert({
@@ -57,7 +61,10 @@ export async function createExhibitorAccount(formData: FormData) {
     email: email,
   })
 
-  if (exErr) return { error: 'Lỗi tạo hồ sơ exhibitor.' }
+  if (exErr) {
+    await admin.auth.admin.deleteUser(authData.user.id)
+    return { error: 'Lỗi tạo hồ sơ exhibitor: ' + exErr.message }
+  }
 
   await sendExhibitorCredentials({ to: email, name: fullName, company, password })
 
