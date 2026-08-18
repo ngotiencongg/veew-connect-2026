@@ -9,7 +9,7 @@ export default async function AdminExhibitorsPage() {
     .from('exhibitors')
     .select(`
       id, company_name:name, category, booth_number:booth, description, website,
-      profiles:user_id(id, full_name:name, phone, country, status)
+      profiles:user_id(id, full_name, phone, country, status)
     `)
     .order('company_name')
 

@@ -14,7 +14,7 @@ export default async function ExhibitorRequestsPage() {
     .from('meetings')
     .select(`
       id, date, start_time, end_time, venue, status, notes, created_at,
-      profiles!buyer_id(full_name:name, company, position, industry, country, phone)
+      profiles!buyer_id(full_name, company, position, industry, country, phone)
     `)
     .eq('exhibitor_id', exhibitor?.id)
     .neq('status', 'cancelled')

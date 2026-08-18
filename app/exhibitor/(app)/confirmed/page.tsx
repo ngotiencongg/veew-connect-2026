@@ -15,7 +15,7 @@ export default async function ExhibitorConfirmedPage() {
     .from('meetings')
     .select(`
       id, date, start_time, end_time, venue, notes,
-      profiles!buyer_id(full_name:name, company, position, phone, industry, country)
+      profiles!buyer_id(full_name, company, position, phone, industry, country)
     `)
     .eq('exhibitor_id', exhibitor?.id)
     .eq('status', 'confirmed')

@@ -70,7 +70,7 @@ export async function adminResetPassword(userId: string) {
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('profiles')
-    .select('full_name:name, role')
+    .select('full_name, role')
     .eq('id', userId)
     .single()
 

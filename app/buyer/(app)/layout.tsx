@@ -11,7 +11,7 @@ export default async function BuyerAppLayout({ children }: { children: React.Rea
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name:name, role, status')
+    .select('full_name, role, status')
     .eq('id', user.id)
     .single()
 

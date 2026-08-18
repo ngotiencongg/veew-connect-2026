@@ -60,7 +60,7 @@ export async function approveBuyer(buyerId: string) {
 
   const { data: profile, error: profileErr } = await admin
     .from('profiles')
-    .select('full_name:name')
+    .select('full_name')
     .eq('id', buyerId)
     .single()
 

@@ -7,7 +7,7 @@ export default async function ExhibitorSettingsPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name:name, company, phone, country')
+    .select('full_name, company, phone, country')
     .eq('id', user!.id)
     .single()
 

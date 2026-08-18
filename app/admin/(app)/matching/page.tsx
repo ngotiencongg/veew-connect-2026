@@ -10,7 +10,7 @@ export default async function AdminMatchingPage() {
   // Fetch approved buyers with needs
   const { data: buyers } = await supabase
     .from('profiles')
-    .select('id, full_name:name, company, industry, needs, country')
+    .select('id, full_name, company, industry, needs, country')
     .eq('role', 'buyer')
     .eq('status', 'approved')
     .order('full_name')

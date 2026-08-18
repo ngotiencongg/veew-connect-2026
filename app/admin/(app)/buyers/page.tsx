@@ -6,7 +6,7 @@ export default async function AdminBuyersPage() {
 
   const { data: rawBuyers } = await admin
     .from('profiles')
-    .select('id, full_name:name, company, position, industry, country, phone, status, created_at')
+    .select('id, full_name, company, position, industry, country, phone, status, created_at')
     .eq('role', 'buyer')
     .order('created_at', { ascending: false })
 

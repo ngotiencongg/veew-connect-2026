@@ -11,7 +11,7 @@ export async function bookSlot(slotId: string, notes?: string) {
   // Get buyer profile
   const { data: buyer } = await supabase
     .from('profiles')
-    .select('full_name:name, company, status')
+    .select('full_name, company, status')
     .eq('id', user.id)
     .single()
 

@@ -13,7 +13,7 @@ export default async function SlotsPage() {
 
   const { data: slots } = await supabase
     .from('slots')
-    .select('*, meetings(buyer_id, status, profiles!buyer_id(full_name:name, company))')
+    .select('*, meetings(buyer_id, status, profiles!buyer_id(full_name, company))')
     .eq('exhibitor_id', exhibitor?.id)
     .order('date')
     .order('start_time')

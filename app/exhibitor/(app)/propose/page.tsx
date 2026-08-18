@@ -14,7 +14,7 @@ export default async function ProposePage() {
   // Get all approved buyers
   const { data: buyers } = await supabase
     .from('profiles')
-    .select('id, full_name:name, company, position, industry, country')
+    .select('id, full_name, company, position, industry, country')
     .eq('role', 'buyer')
     .eq('status', 'approved')
     .order('full_name')
