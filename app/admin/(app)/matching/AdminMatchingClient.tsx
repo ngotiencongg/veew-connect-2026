@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { statusColor } from '@/lib/utils'
 
 type Buyer = {
@@ -48,6 +49,7 @@ export default function AdminMatchingClient({
   exhibitors: Exhibitor[]
   existingMeetings: ExistingMeeting[]
 }) {
+  const router = useRouter()
   const [selectedBuyer, setSelectedBuyer] = useState<string>('all')
   const [minScore, setMinScore] = useState(60)
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -82,7 +84,10 @@ export default function AdminMatchingClient({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ buyerId, exhibitorId: exId }),
         })
-        if (res.ok) setFeedback(`✅ Đã sắp xếp lịch hẹn: ${buyerName} ↔ ${exName}`)
+        if (res.ok) {
+          setFeedback(`✅ Đã sắp xếp lịch hẹn: ${buyerName} ↔ ${exName}`)
+          router.refresh()
+        }
         else setFeedback('❌ Có lỗi xảy ra, vui lòng thử lại.')
       } catch {
         setFeedback('❌ Lỗi kết nối. Vui lòng thử lại.')
