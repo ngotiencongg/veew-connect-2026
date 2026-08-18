@@ -23,7 +23,7 @@ export default async function BrowsePage() {
     slots: (ex.slots ?? []).map((s: any) => ({
       ...s,
       date: s.event_date,
-      is_open: !s.is_open,
+      is_open: s.is_open,
       notes: null,
     })),
   }))
