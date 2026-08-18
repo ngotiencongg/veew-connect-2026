@@ -14,19 +14,12 @@ export default async function BuyerMessagesPage() {
     .eq('buyer_id', user.id)
     .order('created_at', { ascending: false })
 
-  // Get proposals by this buyer (sent to admin)
-  const { data: sentProposals } = await supabase
-    .from('proposals')
-    .select('id, message, status, created_at, exhibitors(name, category, emoji)')
-    .eq('buyer_id', user.id)
-    .order('created_at', { ascending: false })
-
   return (
     <div className="page-wrap">
       <div className="mb-6">
         <h1 className="text-xl font-bold mb-1">Tin nhắn & Đề xuất</h1>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          Các đề xuất gặp gỡ từ exhibitors và yêu cầu của bạn gửi lên Ban Tổ Chức
+          Các đề xuất gặp gỡ từ exhibitors dành cho bạn
         </p>
       </div>
 
@@ -66,33 +59,6 @@ export default async function BuyerMessagesPage() {
           )) : (
             <div className="card p-8 text-center" style={{ color: 'var(--muted)' }}>
               Chưa có đề xuất nào từ exhibitors.
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Proposals sent by buyer */}
-      <div>
-        <h2 className="font-semibold mb-3">📤 Đề xuất tôi đã gửi</h2>
-        <div className="grid gap-3">
-          {sentProposals && sentProposals.length > 0 ? sentProposals.map((p: any) => (
-            <div key={p.id} className="card p-4">
-              <div className="flex items-start gap-3 flex-wrap">
-                <div className="text-2xl flex-none">{p.exhibitors?.emoji ?? '🏢'}</div>
-                <div className="flex-1">
-                  <div className="font-semibold text-sm mb-1">{p.exhibitors?.name ?? 'Exhibitor'}</div>
-                  <p className="text-sm italic" style={{ color: 'var(--muted)' }}>
-                    &ldquo;{p.message}&rdquo;
-                  </p>
-                </div>
-                <span className={`badge text-xs flex-none ${statusColor(p.status)}`}>
-                  {p.status === 'pending' ? '⏳ Chờ Ban Tổ Chức' : p.status === 'arranged' ? '✓ Đã sắp xếp' : 'Từ chối'}
-                </span>
-              </div>
-            </div>
-          )) : (
-            <div className="card p-8 text-center" style={{ color: 'var(--muted)' }}>
-              Bạn chưa gửi đề xuất nào. Vào <strong>Tìm kiếm</strong> để đề xuất gặp gỡ với exhibitor.
             </div>
           )}
         </div>

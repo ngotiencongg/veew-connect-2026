@@ -1,7 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import Papa from 'papaparse'
-import { importBuyers, type ImportBuyerRow } from '@/app/actions/admin'
+import { importBuyers, fetchGoogleSheetCsv, type ImportBuyerRow } from '@/app/actions/admin'
 
 type ParsedRow = ImportBuyerRow & { _error?: string }
 type ImportResult = { email: string; status: 'success' | 'error'; message?: string }
@@ -51,9 +51,13 @@ export default function ImportPage() {
     const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`
 
     try {
-      const res = await fetch(csvUrl)
-      const text = await res.text()
-      Papa.parse(text, {
+      const result = await fetchGoogleSheetCsv(csvUrl)
+      if (result.error || !result.data) {
+        setSheetError(result.error ?? 'Lỗi tải file')
+        return
+      }
+      
+      Papa.parse(result.data, {
         header: true,
         skipEmptyLines: true,
         transformHeader: (h: string) => h.trim().toLowerCase().replace(/\s+/g, '_'),

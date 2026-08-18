@@ -47,12 +47,14 @@ export async function createExhibitorAccount(formData: FormData) {
 
   // Create exhibitor record
   const { error: exErr } = await admin.from('exhibitors').insert({
-    profile_id: authData.user.id,
+    user_id: authData.user.id,
     name: company,
     category,
     booth: boothNumber,
     description,
     website,
+    contact_name: fullName,
+    email: email,
   })
 
   if (exErr) return { error: 'Lỗi tạo hồ sơ exhibitor.' }
@@ -76,13 +78,21 @@ export async function createSlot(formData: FormData) {
 
   if (!exhibitor) return { error: 'Không tìm thấy tài khoản exhibitor.' }
 
+  const dateStr = formData.get('date') as string;
+  const startStr = formData.get('startTime') as string;
+  const endStr = formData.get('endTime') as string;
+
+  // Calculate duration in minutes
+  const [startH, startM] = startStr.split(':').map(Number);
+  const [endH, endM] = endStr.split(':').map(Number);
+  const duration = (endH * 60 + endM) - (startH * 60 + startM);
+
   const { error } = await supabase.from('slots').insert({
     exhibitor_id: exhibitor.id,
-    date: formData.get('date') as string,
-    start_time: formData.get('startTime') as string,
-    end_time: formData.get('endTime') as string,
+    event_date: dateStr,
+    start_time: startStr + ':00',
+    duration_mins: duration > 0 ? duration : 30,
     venue: formData.get('venue') as string,
-    notes: formData.get('notes') as string || null,
     is_open: true,
   })
 
@@ -103,8 +113,8 @@ export async function deleteSlot(slotId: string) {
     .single()
 
   if (!slot) return { error: 'Không tìm thấy slot.' }
-  if ((slot.exhibitors as any).profile_id !== user.id) return { error: 'Không có quyền xóa slot này.' }
-  if (slot.is_open) return { error: 'Không thể xóa slot đã được đặt.' }
+  if ((slot.exhibitors as any).user_id !== user.id) return { error: 'Không có quyền xóa slot này.' }
+  if (!slot.is_open) return { error: 'Không thể xóa slot đã được đặt.' }
 
   await supabase.from('slots').delete().eq('id', slotId)
   revalidatePath('/exhibitor/slots')
@@ -135,6 +145,7 @@ export async function updateExhibitorProfile(formData: FormData) {
       description: formData.get('description') as string,
       website: formData.get('website') as string,
       booth: formData.get('boothNumber') as string,
+      contact_name: formData.get('fullName') as string,
     }).eq('id', exhibitor.id)
   }
 

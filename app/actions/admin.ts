@@ -40,8 +40,7 @@ export async function importBuyers(rows: ImportBuyerRow[]) {
 
     await admin.from('profiles').upsert({
       id: authData.user.id,
-      email: row.email,
-      full_name: row.full_name,
+      name: row.full_name,
       role: 'buyer',
       status: 'approved',
       company: row.company,
@@ -97,4 +96,15 @@ export async function deleteUser(userId: string) {
   revalidatePath('/admin/buyers')
   revalidatePath('/admin/exhibitors')
   return { success: true }
+}
+
+export async function fetchGoogleSheetCsv(csvUrl: string) {
+  try {
+    const res = await fetch(csvUrl, { cache: 'no-store' })
+    if (!res.ok) return { error: 'Không thể tải file Google Sheet. Đảm bảo file được chia sẻ công khai.' }
+    const text = await res.text()
+    return { data: text }
+  } catch (err: any) {
+    return { error: 'Lỗi tải file: ' + err.message }
+  }
 }

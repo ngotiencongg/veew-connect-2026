@@ -96,7 +96,7 @@ export async function cancelMeeting(meetingId: string) {
   if (meeting.buyer_id !== user.id) return { error: 'Không có quyền hủy lịch này.' }
 
   await supabase.from('meetings').update({ status: 'cancelled' }).eq('id', meetingId)
-  await supabase.from('slots').update({ is_open: false }).eq('id', meeting.slot_id)
+  await supabase.from('slots').update({ is_open: true }).eq('id', meeting.slot_id)
 
   revalidatePath('/buyer/schedule')
   return { success: true }
@@ -113,7 +113,7 @@ export async function adminCancelMeeting(meetingId: string) {
   if (!meeting) return { error: 'Không tìm thấy lịch.' }
 
   await admin.from('meetings').update({ status: 'cancelled' }).eq('id', meetingId)
-  await admin.from('slots').update({ is_open: false }).eq('id', meeting.slot_id)
+  await admin.from('slots').update({ is_open: true }).eq('id', meeting.slot_id)
 
   revalidatePath('/admin/meetings')
   return { success: true }

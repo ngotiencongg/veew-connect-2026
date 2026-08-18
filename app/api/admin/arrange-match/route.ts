@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         exhibitor_id: exhibitorId,
         event_date: '2026-10-17',
         start_time: '09:00:00',
-        status: 'pending' // Or confirmed if admin arranges it
+        status: 'confirmed'
       })
 
     if (error) {
