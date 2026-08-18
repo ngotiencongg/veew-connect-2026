@@ -102,6 +102,11 @@ export default function BuyerRegisterPage() {
             </select>
           </div>
 
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>Nhu cầu tìm kiếm / Sản phẩm quan tâm *</label>
+            <textarea name="needs" className="input min-h-[80px] resize-none" placeholder="VD: Tìm kiếm đối tác cung cấp giải pháp chuyển đổi số..." required />
+          </div>
+
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <button type="submit" disabled={loading} className="btn-grad w-full mt-2">

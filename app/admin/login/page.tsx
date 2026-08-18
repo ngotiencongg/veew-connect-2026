@@ -20,13 +20,23 @@ export default function AdminLoginPage() {
     const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
     if (authError) { setError('Email hoặc mật khẩu không đúng'); setLoading(false); return }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profErr } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', data.user.id)
       .single()
 
-    if (profile?.role !== 'admin') { setError('Tài khoản này không có quyền Admin'); setLoading(false); return }
+    if (profErr) {
+      setError(`Lỗi truy vấn quyền (ID: ${data.user.id}): ` + profErr.message)
+      setLoading(false)
+      return
+    }
+
+    if (profile?.role !== 'admin') { 
+      setError(`Tài khoản này không có quyền Admin (Quyền hiện tại: ${profile?.role})`)
+      setLoading(false) 
+      return 
+    }
 
     router.push('/admin/buyers')
     router.refresh()

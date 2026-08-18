@@ -7,14 +7,14 @@ export default async function ExhibitorRequestsPage() {
   const { data: exhibitor } = await supabase
     .from('exhibitors')
     .select('id')
-    .eq('profile_id', user!.id)
+    .eq('user_id', user!.id)
     .single()
 
   const { data: meetings } = await supabase
     .from('meetings')
     .select(`
       id, date, start_time, end_time, venue, status, notes, created_at,
-      profiles!buyer_id(full_name, company, position, industry, country, phone)
+      profiles!buyer_id(full_name:name, company, position, industry, country, phone)
     `)
     .eq('exhibitor_id', exhibitor?.id)
     .neq('status', 'cancelled')
@@ -59,6 +59,24 @@ export default async function ExhibitorRequestsPage() {
                   </p>
                   {m.notes && <p className="text-xs mt-1 italic" style={{ color: 'var(--muted)' }}>"{m.notes}"</p>}
                 </div>
+                {m.status === 'pending' && (
+                  <div className="flex gap-2">
+                    <form action={async () => {
+                      'use server'
+                      const { acceptMeeting } = await import('@/app/actions/meetings')
+                      await acceptMeeting(m.id)
+                    }}>
+                      <button className="btn-grad text-xs px-3 py-1.5" style={{ background: 'var(--green)' }}>Chấp nhận</button>
+                    </form>
+                    <form action={async () => {
+                      'use server'
+                      const { rejectMeeting } = await import('@/app/actions/meetings')
+                      await rejectMeeting(m.id)
+                    }}>
+                      <button className="btn-outline text-xs px-3 py-1.5 text-red-400 border-red-900 hover:border-red-500">Từ chối</button>
+                    </form>
+                  </div>
+                )}
               </div>
             </div>
           )

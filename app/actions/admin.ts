@@ -71,7 +71,7 @@ export async function adminResetPassword(userId: string) {
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('profiles')
-    .select('email, full_name, role')
+    .select('full_name:name, role')
     .eq('id', userId)
     .single()
 
@@ -82,7 +82,10 @@ export async function adminResetPassword(userId: string) {
   if (error) return { error: 'Lỗi đặt lại mật khẩu.' }
 
   if (profile.role === 'buyer') {
-    await sendBuyerCredentials({ to: profile.email, name: profile.full_name, password: newPassword })
+    const { data: userRes } = await admin.auth.admin.getUserById(userId)
+    if (userRes?.user?.email) {
+      await sendBuyerCredentials({ to: userRes.user.email, name: profile.full_name, password: newPassword })
+    }
   }
 
   return { success: true, newPassword }

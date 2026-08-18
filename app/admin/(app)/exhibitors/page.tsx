@@ -8,8 +8,8 @@ export default async function AdminExhibitorsPage() {
   const { data: rawExhibitors } = await admin
     .from('exhibitors')
     .select(`
-      id, company_name, category, booth_number, description, website,
-      profiles:profile_id(id, full_name, email, phone, country, status)
+      id, company_name:name, category, booth_number:booth, description, website,
+      profiles:user_id(id, full_name:name, phone, country, status)
     `)
     .order('company_name')
 

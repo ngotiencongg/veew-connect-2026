@@ -8,14 +8,14 @@ export default async function ExhibitorConfirmedPage() {
   const { data: exhibitor } = await supabase
     .from('exhibitors')
     .select('id')
-    .eq('profile_id', user!.id)
+    .eq('user_id', user!.id)
     .single()
 
   const { data: meetings } = await supabase
     .from('meetings')
     .select(`
       id, date, start_time, end_time, venue, notes,
-      profiles!buyer_id(full_name, company, position, phone, industry, country)
+      profiles!buyer_id(full_name:name, company, position, phone, industry, country)
     `)
     .eq('exhibitor_id', exhibitor?.id)
     .eq('status', 'confirmed')

@@ -10,7 +10,7 @@ export default async function BuyerMatchPage() {
   // Get buyer profile with needs
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, industry, needs')
+    .select('full_name:name, industry, needs')
     .eq('id', user.id)
     .single()
 

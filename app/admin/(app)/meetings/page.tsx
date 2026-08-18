@@ -9,7 +9,7 @@ export default async function AdminMeetingsPage() {
     .from('meetings')
     .select(`
       id, event_date, start_time, venue, status, notes, created_at,
-      profiles:buyer_id(full_name, company),
+      profiles:buyer_id(full_name:name, company),
       exhibitors(name, booth)
     `)
     .order('event_date')

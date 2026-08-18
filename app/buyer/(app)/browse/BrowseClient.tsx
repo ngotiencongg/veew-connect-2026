@@ -9,7 +9,7 @@ type Slot = {
   date: string
   start_time: string
   venue: string | null
-  is_booked: boolean
+  is_open: boolean
   notes: string | null
 }
 
@@ -48,7 +48,7 @@ export default function BrowseClient({
       (ex.profiles.industry ?? '').toLowerCase().includes(q)
 
     const matchDate = !filterDate ||
-      ex.slots.some(s => s.date === filterDate && !s.is_booked)
+      ex.slots.some(s => s.date === filterDate && s.is_open)
 
     return matchSearch && matchDate
   })
@@ -100,7 +100,7 @@ export default function BrowseClient({
       {/* Exhibitor cards */}
       <div className="grid gap-4">
         {filtered.map(ex => {
-          const openSlots = ex.slots.filter(s => !s.is_booked)
+          const openSlots = ex.slots.filter(s => s.is_open)
           const alreadyBooked = booked.has(ex.id)
 
           return (

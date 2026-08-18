@@ -11,7 +11,7 @@ type Slot = {
   end_time: string
   venue: string | null
   notes: string | null
-  is_booked: boolean
+  is_open: boolean
   meetings?: Array<{
     buyer_id: string
     status: string
@@ -174,7 +174,7 @@ export default function SlotsClient({ slots, exhibitorId }: { slots: Slot[]; exh
                             {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
                           </span>
                           {slot.venue && <span className="text-xs" style={{ color: 'var(--muted)' }}>📍 {slot.venue}</span>}
-                          {slot.is_booked ? (
+                          {!slot.is_open ? (
                             <span className="badge text-xs px-2 py-0.5"
                               style={{ background: 'rgba(0,200,83,.15)', borderColor: 'rgba(0,200,83,.4)', color: 'var(--green)' }}>
                               ✓ Đã đặt
@@ -193,7 +193,7 @@ export default function SlotsClient({ slots, exhibitorId }: { slots: Slot[]; exh
                         )}
                         {slot.notes && <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>📝 {slot.notes}</p>}
                       </div>
-                      {!slot.is_booked && (
+                      {slot.is_open && (
                         <button onClick={() => handleDelete(slot.id)} disabled={isPending}
                           className="btn-outline text-xs px-2 py-1 text-red-400 border-red-900 hover:border-red-500">
                           Xóa

@@ -23,7 +23,7 @@ export async function createExhibitorAccount(formData: FormData) {
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName, role: 'exhibitor' },
+    user_metadata: { name: fullName, role: 'exhibitor' },
   })
 
   if (signUpError) {
@@ -37,7 +37,7 @@ export async function createExhibitorAccount(formData: FormData) {
   await admin.from('profiles').upsert({
     id: authData.user.id,
     email,
-    full_name: fullName,
+    name: fullName,
     role: 'exhibitor',
     status: 'approved',
     company,
@@ -48,9 +48,9 @@ export async function createExhibitorAccount(formData: FormData) {
   // Create exhibitor record
   const { error: exErr } = await admin.from('exhibitors').insert({
     profile_id: authData.user.id,
-    company_name: company,
+    name: company,
     category,
-    booth_number: boothNumber,
+    booth: boothNumber,
     description,
     website,
   })
@@ -71,7 +71,7 @@ export async function createSlot(formData: FormData) {
   const { data: exhibitor } = await supabase
     .from('exhibitors')
     .select('id')
-    .eq('profile_id', user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (!exhibitor) return { error: 'Không tìm thấy tài khoản exhibitor.' }
@@ -83,7 +83,7 @@ export async function createSlot(formData: FormData) {
     end_time: formData.get('endTime') as string,
     venue: formData.get('venue') as string,
     notes: formData.get('notes') as string || null,
-    is_booked: false,
+    is_open: true,
   })
 
   if (error) return { error: 'Lỗi tạo slot: ' + error.message }
@@ -98,13 +98,13 @@ export async function deleteSlot(slotId: string) {
 
   const { data: slot } = await supabase
     .from('slots')
-    .select('is_booked, exhibitors!inner(profile_id)')
+    .select('is_open, exhibitors!inner(user_id)')
     .eq('id', slotId)
     .single()
 
   if (!slot) return { error: 'Không tìm thấy slot.' }
   if ((slot.exhibitors as any).profile_id !== user.id) return { error: 'Không có quyền xóa slot này.' }
-  if (slot.is_booked) return { error: 'Không thể xóa slot đã được đặt.' }
+  if (slot.is_open) return { error: 'Không thể xóa slot đã được đặt.' }
 
   await supabase.from('slots').delete().eq('id', slotId)
   revalidatePath('/exhibitor/slots')
@@ -117,7 +117,7 @@ export async function updateExhibitorProfile(formData: FormData) {
   if (!user) return { error: 'Chưa đăng nhập.' }
 
   await supabase.from('profiles').update({
-    full_name: formData.get('fullName') as string,
+    name: formData.get('fullName') as string,
     company: formData.get('company') as string,
     phone: formData.get('phone') as string,
     country: formData.get('country') as string,
@@ -126,15 +126,15 @@ export async function updateExhibitorProfile(formData: FormData) {
   const { data: exhibitor } = await supabase
     .from('exhibitors')
     .select('id')
-    .eq('profile_id', user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (exhibitor) {
     await supabase.from('exhibitors').update({
-      company_name: formData.get('company') as string,
+      name: formData.get('company') as string,
       description: formData.get('description') as string,
       website: formData.get('website') as string,
-      booth_number: formData.get('boothNumber') as string,
+      booth: formData.get('boothNumber') as string,
     }).eq('id', exhibitor.id)
   }
 

@@ -10,7 +10,7 @@ export default async function ProposalsPage() {
     .from('proposals')
     .select(`
       id, status, message, created_at,
-      slots(event_date, start_time, venue),
+      meetings(event_date, start_time, venue),
       exhibitors(name, booth)
     `)
     .eq('buyer_id', user!.id)
@@ -18,12 +18,12 @@ export default async function ProposalsPage() {
 
   const proposals = (rawProposals ?? []).map((p: any) => ({
     ...p,
-    slots: Array.isArray(p.slots)
-      ? p.slots[0]
-        ? { date: p.slots[0].event_date, start_time: p.slots[0].start_time, venue: p.slots[0].venue }
+    slots: Array.isArray(p.meetings)
+      ? p.meetings[0]
+        ? { date: p.meetings[0].event_date, start_time: p.meetings[0].start_time, venue: p.meetings[0].venue }
         : null
-      : p.slots
-        ? { date: p.slots.event_date, start_time: p.slots.start_time, venue: p.slots.venue }
+      : p.meetings
+        ? { date: p.meetings.event_date, start_time: p.meetings.start_time, venue: p.meetings.venue }
         : null,
     exhibitors: Array.isArray(p.exhibitors)
       ? p.exhibitors[0]

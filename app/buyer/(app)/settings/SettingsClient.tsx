@@ -10,8 +10,7 @@ type Profile = {
   phone: string | null
   industry: string | null
   country: string | null
-  bio: string | null
-  interests: string | null
+  needs: string | null
   email: string
 }
 
@@ -107,12 +106,8 @@ export default function SettingsClient({ profile }: { profile: Profile | null })
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>Giới thiệu bản thân</label>
-            <textarea name="bio" className="input min-h-[80px] resize-none" defaultValue={profile?.bio ?? ''} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>Lĩnh vực quan tâm / muốn kết nối</label>
-            <input name="interests" className="input" defaultValue={profile?.interests ?? ''} placeholder="VD: Công nghệ thực phẩm, Logistics..." />
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>Nhu cầu tìm kiếm / Sản phẩm quan tâm</label>
+            <textarea name="needs" className="input min-h-[80px] resize-none" defaultValue={profile?.needs ?? ''} placeholder="VD: Công nghệ thực phẩm, Logistics..." />
           </div>
           <button type="submit" disabled={isPending} className="btn-grad">
             {isPending ? 'Đang lưu...' : 'Lưu thay đổi'}

@@ -23,7 +23,7 @@ export async function registerBuyer(formData: FormData) {
     email,
     password: tempPassword,
     email_confirm: true,
-    user_metadata: { full_name: fullName, role: 'buyer' },
+    user_metadata: { name: fullName, role: 'buyer' },
   })
 
   if (signUpError) {
@@ -39,7 +39,7 @@ export async function registerBuyer(formData: FormData) {
     .upsert({
       id: authData.user.id,
       email,
-      full_name: fullName,
+      name: fullName,
       role: 'buyer',
       status: 'pending',
       company,
@@ -47,6 +47,7 @@ export async function registerBuyer(formData: FormData) {
       phone,
       industry,
       country,
+      needs: formData.get('needs') as string,
     })
 
   if (profileError) return { error: 'Lỗi tạo hồ sơ. Vui lòng liên hệ Ban Tổ Chức.' }
@@ -59,7 +60,7 @@ export async function approveBuyer(buyerId: string) {
 
   const { data: profile, error: profileErr } = await admin
     .from('profiles')
-    .select('email, full_name')
+    .select('full_name:name')
     .eq('id', buyerId)
     .single()
 
@@ -73,7 +74,6 @@ export async function approveBuyer(buyerId: string) {
   })
   if (pwErr) return { error: 'Lỗi cập nhật mật khẩu.' }
 
-  // Update status to approved
   const { error: statusErr } = await admin
     .from('profiles')
     .update({ status: 'approved' })
@@ -81,8 +81,12 @@ export async function approveBuyer(buyerId: string) {
 
   if (statusErr) return { error: 'Lỗi cập nhật trạng thái.' }
 
+  // Get user email
+  const { data: userRes } = await admin.auth.admin.getUserById(buyerId)
+  if (!userRes?.user?.email) return { error: 'Không tìm thấy email user.' }
+
   // Send credentials email
-  await sendBuyerCredentials({ to: profile.email, name: profile.full_name, password: newPassword })
+  await sendBuyerCredentials({ to: userRes.user.email, name: profile.full_name, password: newPassword })
 
   revalidatePath('/admin/buyers')
   return { success: true }
@@ -108,12 +112,13 @@ export async function updateBuyerProfile(formData: FormData) {
   const { error } = await supabase
     .from('profiles')
     .update({
-      full_name: formData.get('fullName') as string,
+      name: formData.get('fullName') as string,
       company: formData.get('company') as string,
       position: formData.get('position') as string,
       phone: formData.get('phone') as string,
       industry: formData.get('industry') as string,
       country: formData.get('country') as string,
+      needs: formData.get('needs') as string,
     })
     .eq('id', user.id)
 

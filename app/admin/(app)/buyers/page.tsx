@@ -4,11 +4,18 @@ import BuyersClient from './BuyersClient'
 export default async function AdminBuyersPage() {
   const admin = createAdminClient()
 
-  const { data: buyers } = await admin
+  const { data: rawBuyers } = await admin
     .from('profiles')
-    .select('id, email, full_name, company, position, industry, country, phone, status, created_at')
+    .select('id, full_name:name, company, position, industry, country, phone, status, created_at')
     .eq('role', 'buyer')
     .order('created_at', { ascending: false })
+
+  const { data: authData } = await admin.auth.admin.listUsers()
+  
+  const buyers = (rawBuyers ?? []).map(b => {
+    const authUser = authData?.users.find(u => u.id === b.id)
+    return { ...b, email: authUser?.email ?? '' }
+  })
 
   const stats = {
     total: buyers?.length ?? 0,
