@@ -8,6 +8,19 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient()
     
+    // Kiểm tra meeting trùng lặp
+    const { data: existingMeeting } = await admin
+      .from('meetings')
+      .select('id')
+      .eq('buyer_id', buyerId)
+      .eq('exhibitor_id', exhibitorId)
+      .in('status', ['pending', 'confirmed'])
+      .maybeSingle()
+
+    if (existingMeeting) {
+      return NextResponse.json({ error: 'Đã có lịch hẹn (hoặc đang chờ) giữa 2 người này' }, { status: 400 })
+    }
+
     // Create a meeting directly. We use a placeholder slot, or null if schema allows slot_id to be null.
     // In schema.sql, `slot_id` is references public.slots(id) on delete set null. It CAN be null!
     // But we need a valid event_date and start_time. Let's use the first event day at 09:00.

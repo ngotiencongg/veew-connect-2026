@@ -23,11 +23,11 @@ export async function registerBuyer(formData: FormData) {
     email,
     password: tempPassword,
     email_confirm: true,
-    user_metadata: { name: fullName, role: 'buyer' },
+    user_metadata: { full_name: fullName, role: 'buyer' },
   })
 
   if (signUpError) {
-    if (signUpError.message.includes('already registered')) {
+    if (signUpError.message.includes('already')) {
       return { error: 'Email này đã được đăng ký.' }
     }
     return { error: 'Đăng ký thất bại. Vui lòng thử lại.' }
@@ -39,7 +39,7 @@ export async function registerBuyer(formData: FormData) {
     .upsert({
       id: authData.user.id,
       email,
-      name: fullName,
+      full_name: fullName,
       role: 'buyer',
       status: 'pending',
       company,
@@ -112,7 +112,7 @@ export async function updateBuyerProfile(formData: FormData) {
   const { error } = await supabase
     .from('profiles')
     .update({
-      name: formData.get('fullName') as string,
+      full_name: formData.get('fullName') as string,
       company: formData.get('company') as string,
       position: formData.get('position') as string,
       phone: formData.get('phone') as string,

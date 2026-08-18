@@ -4,17 +4,30 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = `${process.env.RESEND_FROM_NAME} <${process.env.RESEND_FROM_EMAIL}>`
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://connect.veew.vn'
 
+import { createAdminClient } from '@/lib/supabase/server'
+
+async function sendWithLog(template_name: string, to: string, subject: string, html: string) {
+  try {
+    const { data, error } = await resend.emails.send({ from: FROM, to, subject, html })
+    const admin = createAdminClient()
+    await admin.from('email_logs').insert({
+      template_name, recipient: to, subject, status: error ? 'error' : 'success', error: error ? error.message : null
+    })
+    if (error) console.error(`[Email Error] ${template_name} to ${to}:`, error)
+    return { data, error }
+  } catch (err: any) {
+    console.error(`[Email Exception] ${template_name} to ${to}:`, err)
+    return { data: null, error: err }
+  }
+}
+
 // ── Buyer approval + credentials ─────────────────────────────
 export async function sendBuyerCredentials(opts: {
   to: string
   name: string
   password: string
 }) {
-  return resend.emails.send({
-    from: FROM,
-    to: opts.to,
-    subject: '🎉 Tài khoản VEEW Connect 2026 của bạn đã được phê duyệt',
-    html: `
+  return sendWithLog("BuyerCredentials", opts.to, '🎉 Tài khoản VEEW Connect 2026 của bạn đã được phê duyệt', `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a2e">
         <div style="background:linear-gradient(135deg,#7B2FBE,#E91E8C);padding:32px;text-align:center;border-radius:12px 12px 0 0">
           <h1 style="color:#fff;margin:0;font-size:24px">VEEW Connect 2026</h1>
@@ -42,8 +55,7 @@ export async function sendBuyerCredentials(opts: {
             VEEW 2026 • Vietnam Exposition Center, Hà Nội • 17–19/10/2026
           </p>
         </div>
-      </div>`,
-  })
+      </div>`)
 }
 
 // ── Exhibitor account creation ────────────────────────────────
@@ -53,11 +65,7 @@ export async function sendExhibitorCredentials(opts: {
   company: string
   password: string
 }) {
-  return resend.emails.send({
-    from: FROM,
-    to: opts.to,
-    subject: '🏢 Tài khoản Exhibitor VEEW Connect 2026',
-    html: `
+  return sendWithLog("ExhibitorCredentials", opts.to, '🏢 Tài khoản Exhibitor VEEW Connect 2026', `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto">
         <div style="background:linear-gradient(135deg,#7B2FBE,#E91E8C);padding:32px;text-align:center;border-radius:12px 12px 0 0">
           <h1 style="color:#fff;margin:0">VEEW Connect 2026</h1>
@@ -85,8 +93,7 @@ export async function sendExhibitorCredentials(opts: {
             </a>
           </div>
         </div>
-      </div>`,
-  })
+      </div>`)
 }
 
 // ── Meeting confirmation ──────────────────────────────────────
@@ -98,11 +105,7 @@ export async function sendMeetingConfirmation(opts: {
   time: string
   venue: string
 }) {
-  return resend.emails.send({
-    from: FROM,
-    to: opts.to,
-    subject: `✅ Lịch hẹn đã xác nhận: ${opts.exhibitorName} — ${opts.date}`,
-    html: `
+  return sendWithLog("MeetingConfirmation", opts.to, `✅ Lịch hẹn đã xác nhận: ${opts.exhibitorName} — ${opts.date}`, `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto">
         <div style="background:linear-gradient(135deg,#7B2FBE,#E91E8C);padding:24px;text-align:center;border-radius:12px 12px 0 0">
           <h1 style="color:#fff;margin:0;font-size:20px">Lịch hẹn đã xác nhận ✅</h1>
@@ -117,8 +120,7 @@ export async function sendMeetingConfirmation(opts: {
           </div>
           <p style="color:#666;font-size:14px">Vui lòng có mặt đúng giờ. Mang theo card visit và tài liệu giới thiệu nếu cần.</p>
         </div>
-      </div>`,
-  })
+      </div>`)
 }
 
 // ── Booking notification to exhibitor ────────────────────────
@@ -131,11 +133,7 @@ export async function sendBookingNotificationToExhibitor(opts: {
   time: string
   notes?: string
 }) {
-  return resend.emails.send({
-    from: FROM,
-    to: opts.to,
-    subject: `📅 Yêu cầu đặt lịch mới từ ${opts.buyerName}`,
-    html: `
+  return sendWithLog("BookingNotification", opts.to, `📅 Yêu cầu đặt lịch mới từ ${opts.buyerName}`, `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto">
         <div style="background:linear-gradient(135deg,#7B2FBE,#E91E8C);padding:24px;text-align:center;border-radius:12px 12px 0 0">
           <h1 style="color:#fff;margin:0;font-size:20px">Yêu cầu đặt lịch mới 📅</h1>
@@ -155,6 +153,5 @@ export async function sendBookingNotificationToExhibitor(opts: {
             </a>
           </div>
         </div>
-      </div>`,
-  })
+      </div>`)
 }

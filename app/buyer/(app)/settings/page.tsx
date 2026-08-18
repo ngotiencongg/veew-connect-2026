@@ -10,7 +10,7 @@ export default async function BuyerSettingsPage() {
     .select('*')
     .eq('id', user!.id)
     .single()
-  const profile = rawProfile ? { ...rawProfile, full_name: rawProfile.name, email: user?.email ?? '' } : null
+  const profile = rawProfile ? { ...rawProfile, email: user?.email ?? '' } : null
 
   return <SettingsClient profile={profile} />
 }

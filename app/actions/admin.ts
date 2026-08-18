@@ -30,7 +30,7 @@ export async function importBuyers(rows: ImportBuyerRow[]) {
       email: row.email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: row.full_name, role: 'buyer' },
+      user_metadata: { full_full_name: row.full_name, role: 'buyer' },
     })
 
     if (signUpError) {
@@ -38,9 +38,9 @@ export async function importBuyers(rows: ImportBuyerRow[]) {
       continue
     }
 
-    await admin.from('profiles').upsert({
+    const { error: profileErr } = await admin.from('profiles').upsert({
       id: authData.user.id,
-      name: row.full_name,
+      full_name: row.full_name,
       role: 'buyer',
       status: 'approved',
       company: row.company,
@@ -49,6 +49,12 @@ export async function importBuyers(rows: ImportBuyerRow[]) {
       industry: row.industry,
       country: row.country,
     })
+
+    if (profileErr) {
+      await admin.auth.admin.deleteUser(authData.user.id)
+      results.push({ email: row.email, status: 'error', message: 'Lỗi tạo profile: ' + profileErr.message })
+      continue
+    }
 
     await sendBuyerCredentials({ to: row.email, name: row.full_name, password })
     results.push({ email: row.email, status: 'success' })

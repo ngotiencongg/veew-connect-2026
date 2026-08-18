@@ -25,7 +25,7 @@ export async function bookSlot(slotId: string, notes?: string) {
     .single()
 
   if (!slot) return { error: 'Slot không tồn tại.' }
-  if (slot.is_open) return { error: 'Slot này đã được đặt.' }
+  if (!slot.is_open) return { error: 'Slot này đã được đặt.' }
 
   // Check buyer hasn't already booked this exhibitor
   const { data: existing } = await supabase
@@ -149,16 +149,20 @@ export async function proposeMeeting(buyerId: string, slotId: string, message: s
 
   if (meetingErr || !meeting) return { error: 'Lỗi tạo cuộc hẹn chờ duyệt.' }
 
+  // Close the slot
+  await supabase.from('slots').update({ is_open: false }).eq('id', slotId)
+
   const { error } = await supabase.from('proposals').insert({
     exhibitor_id: exhibitor.id,
     buyer_id: buyerId,
     meeting_id: meeting.id,
     message,
-    status: 'pending',
+    status: 'pending'
   })
 
   if (error) return { error: 'Lỗi gửi đề xuất.' }
-  revalidatePath('/exhibitor/requests')
+
+  revalidatePath('/exhibitor/propose')
   return { success: true }
 }
 
@@ -169,23 +173,19 @@ export async function acceptProposal(proposalId: string) {
 
   const { data: proposal } = await supabase
     .from('proposals')
-    .select('*, meetings(slot_id)')
+    .select('meeting_id')
     .eq('id', proposalId)
-    .eq('buyer_id', user.id)
     .single()
 
-  if (!proposal) return { error: 'Không tìm thấy đề xuất.' }
-
-  const slotId = proposal.meetings?.slot_id;
-
-  if (slotId) {
-    const { data: slot } = await supabase.from('slots').select('is_open').eq('id', slotId).single();
-    if (slot && !slot.is_open) return { error: 'Slot này đã được đặt.' }
-    await supabase.from('slots').update({ is_open: false }).eq('id', slotId)
+  if (proposal) {
+    await supabase.from('meetings').update({ status: 'confirmed' }).eq('id', proposal.meeting_id)
   }
 
-  await supabase.from('meetings').update({ status: 'confirmed' }).eq('id', proposal.meeting_id)
-  await supabase.from('proposals').update({ status: 'arranged' }).eq('id', proposalId)
+  await supabase
+    .from('proposals')
+    .update({ status: 'arranged' })
+    .eq('id', proposalId)
+    .eq('buyer_id', user.id)
 
   revalidatePath('/buyer/schedule')
   return { success: true }
@@ -195,6 +195,20 @@ export async function rejectProposal(proposalId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Chưa đăng nhập.' }
+
+  const { data: proposal } = await supabase
+    .from('proposals')
+    .select('meeting_id')
+    .eq('id', proposalId)
+    .single()
+
+  if (proposal) {
+    const { data: meeting } = await supabase.from('meetings').select('slot_id').eq('id', proposal.meeting_id).single()
+    if (meeting?.slot_id) {
+      await supabase.from('slots').update({ is_open: true }).eq('id', meeting.slot_id)
+    }
+    await supabase.from('meetings').update({ status: 'rejected' }).eq('id', proposal.meeting_id)
+  }
 
   await supabase
     .from('proposals')
@@ -212,15 +226,18 @@ export async function acceptMeeting(meetingId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Chưa đăng nhập' }
 
+  const { data: exhibitor } = await supabase.from('exhibitors').select('id').eq('user_id', user.id).single()
+  if (!exhibitor) return { error: 'Tài khoản không hợp lệ' }
+
   // update meeting status
   const { error } = await supabase
     .from('meetings')
     .update({ status: 'confirmed' })
     .eq('id', meetingId)
+    .eq('exhibitor_id', exhibitor.id)
 
-  if (error) return { error: 'Lỗi xác nhận cuộc hẹn' }
+  if (error) return { error: 'Lỗi khi chấp nhận' }
   revalidatePath('/exhibitor/requests')
-  revalidatePath('/exhibitor/confirmed')
   return { success: true }
 }
 
@@ -230,26 +247,29 @@ export async function rejectMeeting(meetingId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Chưa đăng nhập' }
 
+  const { data: exhibitor } = await supabase.from('exhibitors').select('id').eq('user_id', user.id).single()
+  if (!exhibitor) return { error: 'Tài khoản không hợp lệ' }
+
   const { data: meeting } = await supabase
     .from('meetings')
-    .select('slot_id')
+    .select('slot_id, exhibitor_id')
     .eq('id', meetingId)
     .single()
+    
+  if (!meeting) return { error: 'Không tìm thấy cuộc hẹn' }
+  if (meeting.exhibitor_id !== exhibitor.id) return { error: 'Không có quyền thao tác' }
 
   const { error } = await supabase
     .from('meetings')
     .update({ status: 'rejected' })
     .eq('id', meetingId)
 
-  if (error) return { error: 'Lỗi từ chối cuộc hẹn' }
-
-  if (meeting?.slot_id) {
-    await supabase
-      .from('slots')
-      .update({ is_open: true })
-      .eq('id', meeting.slot_id)
+  if (!error && meeting.slot_id) {
+    // Reopen the slot
+    await supabase.from('slots').update({ is_open: true }).eq('id', meeting.slot_id)
   }
 
+  if (error) return { error: 'Lỗi khi từ chối' }
   revalidatePath('/exhibitor/requests')
   return { success: true }
 }

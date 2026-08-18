@@ -23,11 +23,11 @@ export async function createExhibitorAccount(formData: FormData) {
     email,
     password,
     email_confirm: true,
-    user_metadata: { name: fullName, role: 'exhibitor' },
+    user_metadata: { full_name: fullName, role: 'exhibitor' },
   })
 
   if (signUpError) {
-    if (signUpError.message.includes('already registered')) {
+    if (signUpError.message.includes('already')) {
       return { error: 'Email này đã được đăng ký.' }
     }
     return { error: 'Lỗi tạo tài khoản: ' + signUpError.message }
@@ -37,7 +37,7 @@ export async function createExhibitorAccount(formData: FormData) {
   await admin.from('profiles').upsert({
     id: authData.user.id,
     email,
-    name: fullName,
+    full_name: fullName,
     role: 'exhibitor',
     status: 'approved',
     company,
@@ -127,7 +127,7 @@ export async function updateExhibitorProfile(formData: FormData) {
   if (!user) return { error: 'Chưa đăng nhập.' }
 
   await supabase.from('profiles').update({
-    name: formData.get('fullName') as string,
+    full_name: formData.get('fullName') as string,
     company: formData.get('company') as string,
     phone: formData.get('phone') as string,
     country: formData.get('country') as string,
